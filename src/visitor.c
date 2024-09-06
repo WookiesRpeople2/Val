@@ -4,33 +4,90 @@
 #include <stdio.h>
 #include <string.h>
 
+static void print_value(AST *visited, char *buffer, size_t buffer_size)
+{
+    switch (visited->type)
+    {
+    case AST_STRING:
+        if (strstr(visited->string_value, "\\n") != NULL)
+        {
+            char *ptr = visited->string_value;
+            char *next;
+            while ((next = strstr(ptr, "\\n")) != NULL)
+            {
+                strncat(buffer, ptr, next - ptr);
+                strncat(buffer, "\n", buffer_size - strlen(buffer) - 1);
+                ptr = next + 2;
+            }
+            break;
+        }
+        strncat(buffer, visited->string_value, buffer_size - strlen(buffer) - 1);
+        break;
+    case AST_INT:
+        char int_str[20];
+        snprintf(int_str, sizeof(int_str), "%d", visited->int_value);
+        strncat(buffer, int_str, buffer_size - strlen(buffer) - 1);
+        break;
+    case AST_FLOAT:
+        char float_str[20];
+        snprintf(float_str, sizeof(float_str), "%.2f", visited->float_value);
+        strncat(buffer, float_str, buffer_size - strlen(buffer) - 1);
+        break;
+    case AST_ARRAY:
+        strncat(buffer, "[", buffer_size - strlen(buffer) - 1);
+        for (int j = 0; j < visited->array_elements_size; j++)
+        {
+            print_value(visited->array_elements[j], buffer, buffer_size);
+            if (j < visited->array_elements_size - 1)
+            {
+                strncat(buffer, ", ", buffer_size - strlen(buffer) - 1);
+            }
+        }
+
+        strncat(buffer, "]", buffer_size - strlen(buffer) - 1);
+        break;
+    case AST_OBJECT:
+        strncat(buffer, "{", buffer_size - strlen(buffer) - 1);
+        for (int k = 0; k < visited->object_size; k++)
+        {
+            strncat(buffer, visited->object_pairs[k]->key, buffer_size - strlen(buffer) - 1);
+            strncat(buffer, ": ", buffer_size - strlen(buffer) - 1);
+
+            print_value(visited->object_pairs[k]->value, buffer, buffer_size);
+
+            if (k < visited->object_size - 1)
+            {
+                strncat(buffer, ", ", buffer_size - strlen(buffer) - 1);
+            }
+        }
+        strncat(buffer, "}", buffer_size - strlen(buffer) - 1);
+        break;
+    default:
+        char ptr_str[20];
+        snprintf(ptr_str, sizeof(ptr_str), "%p", visited);
+        strncat(buffer, ptr_str, buffer_size - strlen(buffer) - 1);
+        break;
+    }
+}
+
 static AST *builtin_ebullience(AST **args, int args_size)
 {
+    char buffer[1024] = {0};
     for (int i = 0; i < args_size; i++)
     {
         AST *visited = vist(args[i]);
+        print_value(visited, buffer, sizeof(buffer));
 
-        switch (visited->type)
+        if (i < args_size - 1)
         {
-        case AST_STRING:
-            printf("%s\n", visited->string_value);
-            break;
-        case AST_INT:
-            printf("%d\n", visited->int_value);
-            break;
-        case AST_FLOAT:
-            printf("%.2f\n", visited->float_value);
-            break;
-        case AST_ARRAY:
-            for (int j = 0; j < visited->array_elements_size; j++)
-            {
-                printf("%d ", visited->array_elements[j]);
-            }
-        default:
-            printf("%p\n", visited);
-            break;
+            if (visited->type == AST_STRING && strstr(visited->string_value, "\\n") != NULL)
+                continue;
+
+            strncat(buffer, " ", sizeof(buffer) - strlen(buffer) - 1);
         }
     }
+
+    printf("%s", buffer);
 
     return init_ast(AST_NOOP);
 }
@@ -142,7 +199,36 @@ AST *vist_array(AST *child)
     return child;
 }
 
-AST *vist_object(AST *child) {}
+AST *vist_object(AST *child)
+{
+    // for (int i = 0; i < child->object_size; i++)
+    // {
+    //     // Assuming each object pair has a key and a value
+    //     printf("Key: %s\n", child->object_pairs[i]->key);
+
+    //     // Visit the value associated with the key
+    //     AST *value = vist(child->object_pairs[i]->value);
+
+    //     // Optionally, handle the value depending on its type
+    //     switch (value->type)
+    //     {
+    //     case AST_STRING:
+    //         printf("Value: %s\n", value->string_value);
+    //         break;
+    //     case AST_INT:
+    //         printf("Value: %d\n", value->int_value);
+    //         break;
+    //     case AST_FLOAT:
+    //         printf("Value: %.2f\n", value->float_value);
+    //         break;
+    //     // Add more cases as needed for other types
+    //     default:
+    //         printf("Unhandled value type: %d\n", value->type);
+    //         break;
+    //     }
+    // }
+    return child;
+}
 
 AST *vist_binop(AST *child)
 {
