@@ -8,6 +8,11 @@
 Lexer *init_lexer(char *contents)
 {
     Lexer *lexer = calloc(1, sizeof(struct LEXER_STRUCT));
+    if (!lexer)
+    {
+        fprintf(stderr, "Memory allocation failed for Lexer\n");
+        return NULL;
+    }
     lexer->contents = contents;
     lexer->index = 0;
     lexer->c = contents[lexer->index];
@@ -26,7 +31,7 @@ void next(Lexer *lexer)
 
 void skip_space(Lexer *lexer)
 {
-    while (lexer->c == ' ' || lexer->c == 10)
+    while (IS_WHITESPACE(lexer->c))
     {
         next(lexer);
     }
@@ -68,6 +73,24 @@ Token *get_token(Lexer *lexer)
         if (lexer->c == ' ' || lexer->c == 10)
             skip_space(lexer);
 
+        if (lexer->c == '/' && (lexer->contents[lexer->index + 1] == '/' || lexer->contents[lexer->index + 1] == '*'))
+            skip_comment(lexer);
+
+        if (lexer->c == 'l' && lexer->contents[lexer->index + 1] == 'i' && lexer->contents[lexer->index + 2] == 'a' && lexer->contents[lexer->index + 3] == 'x')
+            return collect_else_if(lexer);
+        if (lexer->c == 'a' && lexer->contents[lexer->index + 1] == 'x')
+            return collect_if(lexer);
+        if (lexer->c == 'l' && lexer->contents[lexer->index + 1] == 'i')
+            return collect_else(lexer);
+        if (lexer->c == '!' && lexer->contents[lexer->index + 1] == '-' && lexer->contents[lexer->index + 2] == '>')
+            return collect_neq(lexer);
+        if (lexer->c == '-' && lexer->contents[lexer->index + 1] == '>' && lexer->contents[lexer->index + 2] == '-' && lexer->contents[lexer->index + 3] == '>')
+            return collect_eq_eq(lexer);
+        if (lexer->c == '>' && lexer->contents[lexer->index + 1] == '-' && lexer->contents[lexer->index + 2] == '>')
+            return collect_gte(lexer);
+        if (lexer->c == '<' && lexer->contents[lexer->index + 1] == '-' && lexer->contents[lexer->index + 2] == '>')
+            return collect_lte(lexer);
+
         if (isdigit(lexer->c))
             return collect_num(lexer);
 
@@ -77,15 +100,8 @@ Token *get_token(Lexer *lexer)
         if (lexer->c == '"')
             return collect_string(lexer);
 
-        if (lexer->c == '/' && (lexer->contents[lexer->index + 1] == '/' || lexer->contents[lexer->index + 1] == '*'))
-        {
-            skip_comment(lexer);
-        }
-        // printf("%s", lexer->contents[lexer->index + 1]);
-        if (lexer->index + 1 < strlen(lexer->contents) && lexer->c == '-' && lexer->contents[lexer->index + 1] == '>')
-        {
+        if (lexer->c == '-' && lexer->contents[lexer->index + 1] == '>')
             return collect_equal(lexer);
-        }
 
         switch (lexer->c)
         {
@@ -108,7 +124,7 @@ Token *get_token(Lexer *lexer)
             return next_with_token(lexer, init_token(TOKEN_EPAREN, char_as_string(lexer)));
             break;
         case '[':
-            return next_with_token(lexer, init_token(TOEKN_SARR, char_as_string(lexer)));
+            return next_with_token(lexer, init_token(TOKEN_SARR, char_as_string(lexer)));
             break;
         case ']':
             return next_with_token(lexer, init_token(TOKEN_EARR, char_as_string(lexer)));
@@ -134,9 +150,12 @@ Token *get_token(Lexer *lexer)
         case '-':
             return next_with_token(lexer, init_token(TOKEN_DASH, char_as_string(lexer)));
             break;
-            // case '>':
-            //     return next_with_token(lexer, init_token(TOKEN_ARROW, char_as_string(lexer)));
-            //     break;
+        case '>':
+            return next_with_token(lexer, init_token(TOKEN_GT, char_as_string(lexer)));
+            break;
+        case '<':
+            return next_with_token(lexer, init_token(TOKEN_LT, char_as_string(lexer)));
+            break;
         }
     }
 
@@ -210,6 +229,7 @@ Token *collect_equal(Lexer *lexer)
 {
     char *value = calloc(1, sizeof(char));
     value[0] = '\0';
+    int eq_count = 0;
 
     while (lexer->c == '-' && lexer->contents[lexer->index + 1] == '>')
     {
@@ -217,6 +237,7 @@ Token *collect_equal(Lexer *lexer)
         value = realloc(value, (strlen(value) + strlen(equal) + 1) * sizeof(char));
         strcat(value, equal);
 
+        eq_count++;
         next(lexer);
     }
 
@@ -244,27 +265,161 @@ Token *collect_variable(Lexer *lexer)
 Token *collect_variable_type(char *value)
 {
     if (strcmp(value, "euphoria") == 0)
-    {
         return init_token(TOKEN_EUPHORIA, value);
-    }
+
     if (strcmp(value, "elixir") == 0)
-    {
         return init_token(TOKEN_ELXIR, value);
-    }
+
     if (strcmp(value, "lassitude") == 0)
-    {
         return init_token(TOKEN_LASSITUDE, value);
-    }
+
     if (strcmp(value, "sequentia") == 0)
-    {
         return init_token(TOKEN_SEQUENTIA, value);
-    }
+
     if (strcmp(value, "fulminare") == 0)
-    {
         return init_token(TOKEN_FULMINARE, value);
-    }
 
     return init_token(TOKEN_ID, value);
+}
+
+Token *collect_if(Lexer *lexer)
+{
+    char *value = calloc(1, sizeof(char));
+    value[0] = '\0';
+
+    while (lexer->c == 'a' && lexer->contents[lexer->index + 1] == 'x')
+    {
+        char *s = char_as_string(lexer);
+        value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));
+        strcat(value, s);
+
+        next(lexer);
+    }
+
+    next(lexer);
+
+    return init_token(TOKEN_AX, value);
+}
+
+Token *collect_else_if(Lexer *lexer)
+{
+    char *value = calloc(1, sizeof(char));
+    value[0] = '\0';
+
+    while (lexer->c == 'l' && lexer->contents[lexer->index + 1] == 'i' && lexer->contents[lexer->index + 2] == 'a' && lexer->contents[lexer->index + 3] == 'x')
+    {
+        char *s = char_as_string(lexer);
+        value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));
+        strcat(value, s);
+
+        next(lexer);
+    }
+
+    next(lexer);
+    next(lexer);
+    next(lexer);
+
+    return init_token(TOKEN_LIAX, value);
+}
+
+Token *collect_else(Lexer *lexer)
+{
+    char *value = calloc(1, sizeof(char));
+    value[0] = '\0';
+
+    while (lexer->c == 'l' && lexer->contents[lexer->index + 1] == 'i')
+    {
+        char *s = char_as_string(lexer);
+        value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));
+        strcat(value, s);
+
+        next(lexer);
+    }
+
+    next(lexer);
+
+    return init_token(TOKEN_LI, value);
+}
+
+Token *collect_eq_eq(Lexer *lexer)
+{
+    char *value = calloc(1, sizeof(char));
+    value[0] = '\0';
+
+    while (lexer->c == '-' && lexer->contents[lexer->index + 1] == '>' && lexer->contents[lexer->index + 2] == '-' && lexer->contents[lexer->index + 3] == '>')
+    {
+        char *s = char_as_string(lexer);
+        value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));
+        strcat(value, s);
+
+        next(lexer);
+    }
+
+    next(lexer);
+    next(lexer);
+    next(lexer);
+
+    return init_token(TOKEN_EQUAL_EQUAL, value);
+}
+
+Token *collect_neq(Lexer *lexer)
+{
+    char *value = calloc(1, sizeof(char));
+    value[0] = '\0';
+
+    while (lexer->c == '!' && lexer->contents[lexer->index + 1] == '-' && lexer->contents[lexer->index + 2] == '>')
+    {
+        char *s = char_as_string(lexer);
+        value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));
+        strcat(value, s);
+
+        next(lexer);
+    }
+
+    next(lexer);
+    next(lexer);
+
+    return init_token(TOKEN_NEQ, value);
+}
+
+Token *collect_gte(Lexer *lexer)
+{
+    char *value = calloc(1, sizeof(char));
+    value[0] = '\0';
+
+    while (lexer->c == '>' && lexer->contents[lexer->index + 1] == '-' && lexer->contents[lexer->index + 2] == '>')
+    {
+        char *s = char_as_string(lexer);
+        value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));
+        strcat(value, s);
+
+        next(lexer);
+    }
+
+    next(lexer);
+    next(lexer);
+
+    return init_token(TOKEN_GTE, value);
+}
+
+Token *collect_lte(Lexer *lexer)
+{
+    char *value = calloc(1, sizeof(char));
+    value[0] = '\0';
+
+    while (lexer->c == '<' && lexer->contents[lexer->index + 1] == '-' && lexer->contents[lexer->index + 2] == '>')
+    {
+        char *s = char_as_string(lexer);
+        value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));
+        strcat(value, s);
+
+        next(lexer);
+    }
+
+    next(lexer);
+    next(lexer);
+
+    return init_token(TOKEN_LTE, value);
 }
 
 Token *next_with_token(Lexer *lexer, Token *token)

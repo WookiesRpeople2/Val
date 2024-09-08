@@ -10,6 +10,8 @@ typedef struct LEXER_STRUCT
     char *contents;
 } Lexer;
 
+#define IS_WHITESPACE(c) ((c) == ' ' || (c) == '\n')
+
 Lexer *init_lexer(char *contents);
 
 void next(Lexer *lexer);
@@ -29,6 +31,20 @@ Token *collect_equal(Lexer *lexer);
 Token *collect_variable(Lexer *lexer);
 
 Token *collect_variable_type(char *value);
+
+Token *collect_if(Lexer *lexer);
+
+Token *collect_else_if(Lexer *lexer);
+
+Token *collect_else(Lexer *lexer);
+
+Token *collect_eq_eq(Lexer *lexer);
+
+Token *collect_neq(Lexer *lexer);
+
+Token *collect_gte(Lexer *lexer);
+
+Token *collect_lte(Lexer *lexer);
 
 Token *next_with_token(Lexer *lexer, Token *token);
 

@@ -21,6 +21,15 @@ typedef struct AST_STRUCT
         AST_OBJECT_PAIR,
         AST_FN_CALL,
         AST_BIN_OP,
+        AST_AX,
+        AST_LI,
+        AST_LIAX,
+        AST_GT,
+        AST_LT,
+        AST_LTE,
+        AST_GTE,
+        AST_EQ_EQ,
+        AST_NEQ,
         AST_NOOP,
         AST_COMPOUND,
     } type;
@@ -38,6 +47,12 @@ typedef struct AST_STRUCT
     char *fn_name;
     struct AST_STRUCT **fn_call_args;
     size_t fn_call_args_size;
+
+    // for if statements
+    struct AST_STRUCT *condition;
+    struct AST_STRUCT *then_branch;
+    struct AST_STRUCT *else_if_branch;
+    struct AST_STRUCT *else_branch;
 
     // For literals
     char *string_value;

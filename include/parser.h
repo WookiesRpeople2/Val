@@ -33,6 +33,14 @@ AST *parse_term(Parser *parser, Scope *scope);
 
 AST *parse_fn_call(Parser *parser, Scope *scope);
 
+AST *parse_conditon(Parser *parser, Scope *scope);
+
+AST *parse_helper_condition_else(Parser *parser, Scope *scope);
+
+AST *parse_helper_condition_else_if(Parser *parser, Scope *scope);
+
+AST *parser_relation(Parser *parser, Scope *scope);
+
 AST *parse_var(Parser *parser, Scope *scope);
 
 AST *parse_var_def(Parser *parser, Scope *scope);

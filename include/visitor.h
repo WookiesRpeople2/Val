@@ -17,6 +17,10 @@ AST *vist_var(AST *child);
 
 AST *vist_fn_call(AST *child);
 
+AST *vist_conditional(AST *child);
+
+AST *vist_relation(AST *child);
+
 AST *vist_string(AST *child);
 
 AST *vist_int(AST *child);

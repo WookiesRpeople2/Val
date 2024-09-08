@@ -127,6 +127,8 @@ AST *vist(AST *child)
     case AST_MUL:
     case AST_DIV:
         return vist_binop(child);
+    case AST_AX:
+        return vist_conditional(child);
     case AST_NOOP:
         return child;
     }
@@ -177,6 +179,65 @@ AST *vist_fn_call(AST *child)
 
     printf("undefined method %s", child->fn_name);
     exit(1);
+}
+
+AST *vist_conditional(AST *child)
+{
+    AST *condition_result = vist_relation(child->condition);
+
+    if (condition_result->type == AST_INT && condition_result->int_value)
+    {
+        // If the condition is true, execute the 'then' branch
+        return vist(child->then_branch);
+    }
+    else if (child->else_if_branch != NULL)
+    {
+        return vist_conditional(child->else_if_branch);
+    }
+    else if (child->else_branch != NULL)
+    {
+        return vist(child->else_branch->then_branch);
+    }
+
+    return init_ast(AST_NOOP);
+
+    return init_ast(AST_NOOP);
+}
+
+AST *vist_relation(AST *child)
+{
+    AST *left = vist(child->left);
+    AST *right = vist(child->right);
+
+    AST *result = init_ast(AST_INT);
+    result->int_value = 0; // Default to false (0)
+
+    switch (child->type)
+    {
+    case AST_LT:
+        result->int_value = (left->int_value < right->int_value);
+        break;
+    case AST_GT:
+        result->int_value = (left->int_value > right->int_value);
+        break;
+    case AST_GTE:
+        result->int_value = (left->int_value >= right->int_value);
+        break;
+    case AST_LTE:
+        result->int_value = (left->int_value <= right->int_value);
+        break;
+    case AST_EQ_EQ:
+        result->int_value = (left->int_value == right->int_value);
+        break;
+    case AST_NEQ:
+        result->int_value = (left->int_value != right->int_value);
+        break;
+    default:
+        printf("Unsupported condition type: %d\n", child->type);
+        exit(1);
+    }
+
+    return result;
 }
 
 AST *vist_string(AST *child)

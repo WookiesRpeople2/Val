@@ -50,6 +50,8 @@ AST *parse_compound(Parser *parser, Scope *scope)
     case TOKEN_SEQUENTIA:
     case TOKEN_FULMINARE:
         return parse_var_def(parser, scope);
+    case TOKEN_AX:
+        return parse_conditon(parser, scope);
     }
 
     return init_ast(AST_NOOP);
@@ -81,6 +83,7 @@ AST *parse_compounds(Parser *parser, Scope *scope)
 AST *parse_expr(Parser *parser, Scope *scope)
 {
     // printf("(%d, %s)", parser->current_token->type, parser->current_token->value);
+    // printf("Parsing expression. Token: %s, type: %d\n", parser->current_token->value, parser->current_token->type);
     switch (parser->current_token->type)
     {
     case TOKEN_ID:
@@ -92,7 +95,7 @@ AST *parse_expr(Parser *parser, Scope *scope)
         return helper_expr(parser, scope);
     case TOKEN_SBRACKET:
         return parse_object(parser, scope);
-    case TOEKN_SARR:
+    case TOKEN_SARR:
         return parse_array(parser, scope);
     case TOKEN_MUL:
     case TOKEN_DIV:
@@ -213,6 +216,127 @@ AST *parse_fn_call(Parser *parser, Scope *scope)
     return ast;
 }
 
+AST *parse_conditon(Parser *parser, Scope *scope)
+{
+    take(parser, TOKEN_AX);
+
+    // Parse the condition (inside parentheses)
+    take(parser, TOKEN_SPAREN);
+    // printf("%s", parser->current_token->value);
+    AST *condition = parser_relation(parser, scope);
+    take(parser, TOKEN_EPAREN);
+
+    take(parser, TOKEN_SBRACKET);
+    AST *then_branch = parse_compounds(parser, scope);
+    take(parser, TOKEN_EBRACKET);
+
+    // Prepare the AST node for the 'if' statement
+    AST *if_ast = init_ast(AST_AX);
+    if_ast->condition = condition;
+    if_ast->then_branch = then_branch;
+
+    if_ast->else_if_branch = NULL; // Initialize to NULL
+
+    AST *current_else_if = NULL;
+    while (parser->current_token->type == TOKEN_LIAX)
+    {
+        take(parser, TOKEN_LIAX); // 'else if'
+
+        take(parser, TOKEN_SPAREN);
+        AST *else_if_condition = parser_relation(parser, scope);
+        take(parser, TOKEN_EPAREN);
+
+        take(parser, TOKEN_SBRACKET);
+        AST *else_if_then_branch = parse_compounds(parser, scope);
+        take(parser, TOKEN_EBRACKET);
+
+        // Create AST node for 'else if'
+        AST *else_if_ast = init_ast(AST_LIAX);
+        else_if_ast->condition = else_if_condition;
+        else_if_ast->then_branch = else_if_then_branch;
+
+        // Chain the 'else if' to the previous else_if branch
+        if (current_else_if == NULL)
+        {
+            if_ast->else_if_branch = else_if_ast;
+        }
+        else
+        {
+            current_else_if->else_if_branch = else_if_ast;
+        }
+        current_else_if = else_if_ast;
+    }
+    if (parser->current_token->type == TOKEN_LI)
+    {
+        take(parser, TOKEN_LI); // 'else'
+        // printf("hit");
+        take(parser, TOKEN_SBRACKET);
+        AST *else_branch = parse_compounds(parser, scope);
+        take(parser, TOKEN_EBRACKET);
+
+        AST *else_ast = init_ast(AST_LI);
+        else_ast->then_branch = else_branch;
+
+        if (current_else_if == NULL)
+        {
+            if_ast->else_branch = else_ast;
+        }
+        else
+        {
+            current_else_if->else_branch = else_ast;
+        }
+    }
+
+    if_ast->scope = scope;
+    return if_ast;
+}
+
+AST *parser_relation(Parser *parser, Scope *scope)
+{
+    AST *left = parse_expr(parser, scope);
+    // take(parser, parser->current_token->type);
+
+    AST *ast = NULL;
+    // printf("(%s, %d)\n", parser->current_token->value, parser->current_token->type);
+    switch (parser->current_token->type)
+    {
+    case TOKEN_GT:
+        take(parser, TOKEN_GT);
+        ast = init_ast(AST_GT); // Greater than
+        break;
+    case TOKEN_LT:
+        take(parser, TOKEN_LT);
+        ast = init_ast(AST_LT);
+        break;
+    case TOKEN_GTE:
+        take(parser, TOKEN_GTE);
+        ast = init_ast(AST_GTE);
+        break;
+    case TOKEN_LTE:
+        take(parser, TOKEN_LTE);
+        ast = init_ast(AST_LTE);
+        break;
+    case TOKEN_EQUAL_EQUAL:
+        take(parser, TOKEN_EQUAL_EQUAL);
+        // printf("cT: %s %d", parser->current_token->value, parser->current_token->type);
+        ast = init_ast(AST_EQ_EQ); // Equal to
+        break;
+    case TOKEN_NEQ:
+        ast = init_ast(AST_NEQ); // Not equal to
+        break;
+    default:
+        printf("Unexpected relational operator token %d\n", parser->current_token->type);
+        exit(1);
+    }
+    AST *right = parse_expr(parser, scope);
+
+    ast->left = left;
+    ast->right = right;
+    ast->scope = scope;
+
+    return ast;
+}
+
 AST *parse_var(Parser *parser, Scope *scope)
 {
     // printf("Parsing var_def: Current token = %s (%d)\n", parser->current_token->value, parser->current_token->type);
@@ -287,7 +411,7 @@ AST *parse_float(Parser *parser, Scope *scope)
 
 AST *parse_array(Parser *parser, Scope *scope)
 {
-    take(parser, TOEKN_SARR); // Consume the '[' token
+    take(parser, TOKEN_SARR); // Consume the '[' token
 
     AST *array_ast = init_ast(AST_ARRAY);                               // Create a new AST node for the array
     array_ast->array_elements = calloc(1, sizeof(struct AST_STRUCT *)); // Initialize elements

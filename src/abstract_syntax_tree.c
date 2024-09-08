@@ -19,6 +19,12 @@ AST *init_ast(int type)
     ast->fn_call_args = (void *)0;
     ast->fn_call_args_size = 0;
 
+    // for if statements
+    ast->condition = (void *)0;
+    ast->then_branch = (void *)0;
+    ast->else_if_branch = (void *)0;
+    ast->else_branch = (void *)0;
+
     // For literals
     ast->string_value = (void *)0;
     ast->int_value = 0;
