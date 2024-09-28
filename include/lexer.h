@@ -32,12 +32,6 @@ Token *collect_variable(Lexer *lexer);
 
 Token *collect_variable_type(char *value);
 
-Token *collect_if(Lexer *lexer);
-
-Token *collect_else_if(Lexer *lexer);
-
-Token *collect_else(Lexer *lexer);
-
 Token *collect_eq_eq(Lexer *lexer);
 
 Token *collect_neq(Lexer *lexer);

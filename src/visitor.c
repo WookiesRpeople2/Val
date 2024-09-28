@@ -6,6 +6,7 @@
 
 static void print_value(AST *visited, char *buffer, size_t buffer_size)
 {
+    // printf("PRINT VALUE PROB: %s", visited->string_value);
     switch (visited->type)
     {
     case AST_STRING:
@@ -101,13 +102,15 @@ AST *vist(AST *child)
 {
     // printf("%s\n", child->var_def_name);
     // printf("\n%s", child->var_name);
-
+    // printf("CHILD: %s", child->string_value);
     switch (child->type)
     {
     case AST_VAR_DEF:
         return vist_var_def(child);
     case AST_VAR:
         return vist_var(child);
+    case AST_REDEF_VAR:
+        return vist_var_reassign(child);
     case AST_FN_CALL:
         return vist_fn_call(child);
     case AST_STRING:
@@ -129,6 +132,10 @@ AST *vist(AST *child)
         return vist_binop(child);
     case AST_AX:
         return vist_conditional(child);
+    case AST_PETRICHOR:
+        return vist_loop_petrichor(child);
+    case AST_INCENDIARY:
+        return vist_loop_incendiary(child);
     case AST_NOOP:
         return child;
     }
@@ -155,14 +162,30 @@ AST *vist_var_def(AST *child)
 AST *vist_var(AST *child)
 {
     AST *var_def = get_var_def(child->scope, child->var_name);
-
+    // printf("%s", va_list)
+    // printf("YHYHYH: %s", var_def->var_def_value);
     if (var_def == (void *)0)
     {
         printf("Undefined variable: '%s'\n", child->var_name);
         exit(1);
     }
 
+    // printf("VAR_REDEF: %d\n", child->var_def_value->int_value);
+    // if (child->type == AST_REDEF_VAR)
+    // {
+    //     AST *new_value = vist(child->var_def_value);
+    //     var_def->var_def_value = new_value;
+    //     return var_def;
+    // }
+
     return vist(var_def->var_def_value);
+}
+
+AST *vist_var_reassign(AST *child)
+{
+    AST *new_value = vist(child->var_def_value);
+    AST *var_def = reassign_var_def(child->scope, child->var_name, new_value);
+    return var_def;
 }
 
 AST *vist_fn_call(AST *child)
@@ -187,19 +210,16 @@ AST *vist_conditional(AST *child)
 
     if (condition_result->type == AST_INT && condition_result->int_value)
     {
-        // If the condition is true, execute the 'then' branch
-        return vist(child->then_branch);
+        vist(child->then_branch);
     }
     else if (child->else_if_branch != NULL)
     {
-        return vist_conditional(child->else_if_branch);
+        vist_conditional(child->else_if_branch);
     }
     else if (child->else_branch != NULL)
     {
-        return vist(child->else_branch->then_branch);
+        vist(child->else_branch->then_branch);
     }
-
-    return init_ast(AST_NOOP);
 
     return init_ast(AST_NOOP);
 }
@@ -232,12 +252,58 @@ AST *vist_relation(AST *child)
     case AST_NEQ:
         result->int_value = (left->int_value != right->int_value);
         break;
+    case 1:
+        result->int_value = true;
+        break;
     default:
         printf("Unsupported condition type: %d\n", child->type);
         exit(1);
     }
 
     return result;
+}
+
+AST *vist_loop_petrichor(AST *child)
+{
+    AST *init = vist(child->loop_init);
+    char *var_name = child->loop_init->var_def_name;
+    AST *var_def = get_var_def(child->scope, var_name);
+
+    while (vist_relation(child->condition)->int_value)
+    {
+        vist(child->loop_body);
+
+        if (child->loop_break)
+            break;
+
+        if (var_def)
+            var_def->var_def_value->int_value++;
+    }
+
+    return init_ast(AST_NOOP);
+}
+
+AST *vist_loop_incendiary(AST *child)
+{
+    AST *var_def = (void *)0;
+
+    if (child->loop_init && child->loop_init->var_def_name)
+    {
+        char *var_name = child->loop_init->var_def_name;
+        var_def = get_var_def(child->scope, var_name);
+    }
+
+    while (vist_relation(child->condition)->int_value)
+    {
+        vist(child->loop_body);
+
+        if (child->loop_break)
+            break;
+
+        if (var_def)
+            var_def->var_def_value->int_value++;
+    }
+    return init_ast(AST_NOOP);
 }
 
 AST *vist_string(AST *child)
@@ -406,6 +472,7 @@ AST *vist_compund(AST *child)
 {
     for (int i = 0; i < child->compound_value_size; i++)
     {
+        // printf("COMPOUND: %s", child->compound_value[i]->string_value);
         vist(child->compound_value[i]);
     }
 

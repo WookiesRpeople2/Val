@@ -22,4 +22,6 @@ AST *add_var_def(Scope *scope, AST *var_def);
 
 AST *get_var_def(Scope *scope, const char *vname);
 
+AST *reassign_var_def(Scope *scope, const char *vname, AST *new_var_def);
+
 #endif

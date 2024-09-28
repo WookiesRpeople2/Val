@@ -15,11 +15,17 @@ AST *vist_var_def(AST *child);
 
 AST *vist_var(AST *child);
 
+AST *vist_var_reassign(AST *child);
+
 AST *vist_fn_call(AST *child);
 
 AST *vist_conditional(AST *child);
 
 AST *vist_relation(AST *child);
+
+AST *vist_loop_petrichor(AST *child);
+
+AST *vist_loop_incendiary(AST *child);
 
 AST *vist_string(AST *child);
 

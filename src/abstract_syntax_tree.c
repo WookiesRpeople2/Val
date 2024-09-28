@@ -25,6 +25,11 @@ AST *init_ast(int type)
     ast->else_if_branch = (void *)0;
     ast->else_branch = (void *)0;
 
+    // for loops
+    ast->loop_init = (void *)0;
+    ast->loop_body = (void *)0;
+    ast->loop_break = false;
+
     // For literals
     ast->string_value = (void *)0;
     ast->int_value = 0;

@@ -52,6 +52,10 @@ AST *parse_compound(Parser *parser, Scope *scope)
         return parse_var_def(parser, scope);
     case TOKEN_AX:
         return parse_conditon(parser, scope);
+    case TOKEN_PETRICHOR:
+        return parser_petrichor(parser, scope);
+    case TOKEN_INCENDIARY:
+        return parser_incendiary(parser, scope);
     }
 
     return init_ast(AST_NOOP);
@@ -72,7 +76,7 @@ AST *parse_compounds(Parser *parser, Scope *scope)
     {
         take(parser, TOKEN_SEMI_COLONE);
         AST *ast_statement = parse_compound(parser, scope);
-        compound->compound_value_size += 1;
+        compound->compound_value_size++;
         compound->compound_value = realloc(compound->compound_value, compound->compound_value_size * sizeof(struct AST_STRUCT *));
         compound->compound_value[compound->compound_value_size - 1] = ast_statement;
     }
@@ -83,7 +87,7 @@ AST *parse_compounds(Parser *parser, Scope *scope)
 AST *parse_expr(Parser *parser, Scope *scope)
 {
     // printf("(%d, %s)", parser->current_token->type, parser->current_token->value);
-    // printf("Parsing expression. Token: %s, type: %d\n", parser->current_token->value, parser->current_token->type);
+    printf("Parsing expression. Token: %s, type: %d\n", parser->current_token->value, parser->current_token->type);
     switch (parser->current_token->type)
     {
     case TOKEN_ID:
@@ -103,6 +107,14 @@ AST *parse_expr(Parser *parser, Scope *scope)
     case TOKEN_PLUS:
     case TOKEN_DASH:
         return helper_expr(parser, scope);
+    case TOKEN_GT:
+    case TOKEN_GTE:
+    case TOKEN_LT:
+    case TOKEN_LTE:
+    case TOKEN_EQUAL_EQUAL:
+        return parser_relation(parser, scope);
+    case TOKEN_INURE:
+        return parser_inure(parser, scope);
     default:
         return init_ast(AST_NOOP);
     }
@@ -156,7 +168,7 @@ AST *helper_expr(Parser *parser, Scope *scope)
 
         left = op;
     }
-
+    printf("HELPER_EXPR: %d\n", left->int_value);
     return left;
 }
 
@@ -337,6 +349,65 @@ AST *parser_relation(Parser *parser, Scope *scope)
     return ast;
 }
 
+AST *parser_petrichor(Parser *parser, Scope *scope)
+{
+    take(parser, TOKEN_PETRICHOR);
+    take(parser, TOKEN_SPAREN);
+
+    AST *init = parse_var_def(parser, scope);
+    take(parser, TOKEN_SEMI_COLONE);
+
+    AST *condition = parser_relation(parser, scope);
+    take(parser, TOKEN_EPAREN);
+
+    take(parser, TOKEN_SBRACKET);
+    AST *body = parse_compounds(parser, scope);
+    take(parser, TOKEN_EBRACKET);
+
+    AST *petrichor_ast = init_ast(AST_PETRICHOR);
+    petrichor_ast->loop_init = init;
+    petrichor_ast->condition = condition;
+    petrichor_ast->loop_body = body;
+    petrichor_ast->scope = scope;
+
+    return petrichor_ast;
+}
+
+AST *parser_incendiary(Parser *parser, Scope *scope)
+{
+    AST *init;
+    take(parser, TOKEN_INCENDIARY);
+    take(parser, TOKEN_SPAREN);
+    if (parser->current_token->type == TOKEN_ELXIR)
+    {
+        init = parse_var_def(parser, scope);
+        take(parser, TOKEN_SEMI_COLONE);
+    }
+
+    AST *condition = parser_relation(parser, scope);
+    take(parser, TOKEN_EPAREN);
+
+    take(parser, TOKEN_SBRACKET);
+    AST *body = parse_compounds(parser, scope);
+    take(parser, TOKEN_EBRACKET);
+
+    AST *incendiary_ast = init_ast(AST_INCENDIARY);
+    incendiary_ast->loop_init = init;
+    incendiary_ast->condition = condition;
+    incendiary_ast->loop_body = body;
+    incendiary_ast->scope = scope;
+
+    return incendiary_ast;
+}
+
+AST *parser_inure(Parser *parser, Scope *scope)
+{
+    take(parser, TOKEN_INURE);
+    AST *ast = init_ast(AST_INURE);
+    ast->loop_break = true;
+    return ast;
+}
+
 AST *parse_var(Parser *parser, Scope *scope)
 {
     // printf("Parsing var_def: Current token = %s (%d)\n", parser->current_token->value, parser->current_token->type);
@@ -347,6 +418,8 @@ AST *parse_var(Parser *parser, Scope *scope)
 
     if (parser->current_token->type == TOKEN_SPAREN)
         return parse_fn_call(parser, scope);
+    if (parser->current_token->type == TOKEN_EQUAL)
+        return parse_reassign(parser, scope);
 
     AST *ast = init_ast(AST_VAR);
     ast->var_name = token_value;
@@ -356,10 +429,28 @@ AST *parse_var(Parser *parser, Scope *scope)
     return ast;
 }
 
+AST *parse_reassign(Parser *parser, Scope *scope)
+{
+    char *var_name = parser->prev_token->value;
+    take(parser, TOKEN_EQUAL);
+    // printf("current value: %s\n", parser->current_token->value);
+    AST *new_value = parse_expr(parser, scope);
+    // printf("New value: %d\n", new_value->var_def_value);
+
+    AST *reassign_ast = init_ast(AST_REDEF_VAR);
+    reassign_ast->var_name = var_name;
+    reassign_ast->var_def_value = new_value;
+    // printf("Reassign Vlaue: %d\n", reassign_ast->var_def_value->int_value);
+    reassign_ast->scope = scope;
+
+    return reassign_ast;
+}
+
 AST *parse_var_def(Parser *parser, Scope *scope)
 {
     take(parser, parser->current_token->type);
     char *var_def_name = parser->current_token->value;
+    // printf("%s", var_def_name);
 
     take(parser, TOKEN_ID);
     take(parser, TOKEN_EQUAL);

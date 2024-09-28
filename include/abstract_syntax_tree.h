@@ -2,6 +2,7 @@
 #define AST_H
 
 #include <stdlib.h>
+#include <stdbool.h>
 
 typedef struct AST_STRUCT
 {
@@ -9,6 +10,7 @@ typedef struct AST_STRUCT
     {
         AST_VAR,
         AST_VAR_DEF,
+        AST_REDEF_VAR,
         AST_STRING,
         AST_INT,
         AST_FLOAT,
@@ -30,6 +32,9 @@ typedef struct AST_STRUCT
         AST_GTE,
         AST_EQ_EQ,
         AST_NEQ,
+        AST_PETRICHOR,
+        AST_INCENDIARY,
+        AST_INURE,
         AST_NOOP,
         AST_COMPOUND,
     } type;
@@ -53,6 +58,11 @@ typedef struct AST_STRUCT
     struct AST_STRUCT *then_branch;
     struct AST_STRUCT *else_if_branch;
     struct AST_STRUCT *else_branch;
+
+    // for loops
+    struct AST_STRUCT *loop_init;
+    struct AST_STRUCT *loop_body;
+    bool loop_break;
 
     // For literals
     char *string_value;

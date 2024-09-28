@@ -83,3 +83,17 @@ AST *get_var_def(Scope *scope, const char *vname)
 
     return (void *)0;
 }
+
+AST *reassign_var_def(Scope *scope, const char *vname, AST *new_var_def)
+{
+    AST *var_def = get_var_def(scope, vname);
+    if (var_def->var_def_name == NULL)
+    {
+        fprintf(stderr, "Error: Variable '%s' not found.\n", vname);
+        return NULL;
+    }
+
+    var_def->var_def_value = new_var_def;
+
+    return var_def;
+}

@@ -2,14 +2,12 @@
 #define IO_H
 
 #include <stdio.h>
+#include <stdbool.h>
 #define MAX_PATH 1024
 #define MAX_INPUT 64
 #define VERSION "0.0.1"
 #define EXT "val"
 
-typedef int bool;
-#define false 0
-#define true 1
 #if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
 

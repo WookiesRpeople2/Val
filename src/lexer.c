@@ -76,12 +76,6 @@ Token *get_token(Lexer *lexer)
         if (lexer->c == '/' && (lexer->contents[lexer->index + 1] == '/' || lexer->contents[lexer->index + 1] == '*'))
             skip_comment(lexer);
 
-        if (lexer->c == 'l' && lexer->contents[lexer->index + 1] == 'i' && lexer->contents[lexer->index + 2] == 'a' && lexer->contents[lexer->index + 3] == 'x')
-            return collect_else_if(lexer);
-        if (lexer->c == 'a' && lexer->contents[lexer->index + 1] == 'x')
-            return collect_if(lexer);
-        if (lexer->c == 'l' && lexer->contents[lexer->index + 1] == 'i')
-            return collect_else(lexer);
         if (lexer->c == '!' && lexer->contents[lexer->index + 1] == '-' && lexer->contents[lexer->index + 2] == '>')
             return collect_neq(lexer);
         if (lexer->c == '-' && lexer->contents[lexer->index + 1] == '>' && lexer->contents[lexer->index + 2] == '-' && lexer->contents[lexer->index + 3] == '>')
@@ -279,66 +273,25 @@ Token *collect_variable_type(char *value)
     if (strcmp(value, "fulminare") == 0)
         return init_token(TOKEN_FULMINARE, value);
 
+    if (strcmp(value, "ax") == 0)
+        return init_token(TOKEN_AX, value);
+
+    if (strcmp(value, "liax") == 0)
+        return init_token(TOKEN_LIAX, value);
+
+    if (strcmp(value, "li") == 0)
+        return init_token(TOKEN_LI, value);
+
+    if (strcmp(value, "petrichor") == 0)
+        return init_token(TOKEN_PETRICHOR, value);
+
+    if (strcmp(value, "incendiary") == 0)
+        return init_token(TOKEN_INCENDIARY, value);
+
+    if (strcmp(value, "inure") == 0)
+        return init_token(TOKEN_INURE, value);
+
     return init_token(TOKEN_ID, value);
-}
-
-Token *collect_if(Lexer *lexer)
-{
-    char *value = calloc(1, sizeof(char));
-    value[0] = '\0';
-
-    while (lexer->c == 'a' && lexer->contents[lexer->index + 1] == 'x')
-    {
-        char *s = char_as_string(lexer);
-        value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));
-        strcat(value, s);
-
-        next(lexer);
-    }
-
-    next(lexer);
-
-    return init_token(TOKEN_AX, value);
-}
-
-Token *collect_else_if(Lexer *lexer)
-{
-    char *value = calloc(1, sizeof(char));
-    value[0] = '\0';
-
-    while (lexer->c == 'l' && lexer->contents[lexer->index + 1] == 'i' && lexer->contents[lexer->index + 2] == 'a' && lexer->contents[lexer->index + 3] == 'x')
-    {
-        char *s = char_as_string(lexer);
-        value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));
-        strcat(value, s);
-
-        next(lexer);
-    }
-
-    next(lexer);
-    next(lexer);
-    next(lexer);
-
-    return init_token(TOKEN_LIAX, value);
-}
-
-Token *collect_else(Lexer *lexer)
-{
-    char *value = calloc(1, sizeof(char));
-    value[0] = '\0';
-
-    while (lexer->c == 'l' && lexer->contents[lexer->index + 1] == 'i')
-    {
-        char *s = char_as_string(lexer);
-        value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));
-        strcat(value, s);
-
-        next(lexer);
-    }
-
-    next(lexer);
-
-    return init_token(TOKEN_LI, value);
 }
 
 Token *collect_eq_eq(Lexer *lexer)
@@ -420,6 +373,32 @@ Token *collect_lte(Lexer *lexer)
     next(lexer);
 
     return init_token(TOKEN_LTE, value);
+}
+
+Token *collect_petrichor(Lexer *lexer)
+{
+    // petrichor
+    char *value = calloc(1, sizeof(char));
+    value[0] = '\0';
+
+    while (lexer->contents[lexer->index + 5] == 'c' && lexer->contents[lexer->index + 6] == 'h' && lexer->contents[lexer->index + 7] == 'o' && lexer->contents[lexer->index + 8] == 'r')
+    {
+        char *s = char_as_string(lexer);
+        value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));
+        strcat(value, s);
+
+        next(lexer);
+    }
+
+    next(lexer);
+    next(lexer);
+    next(lexer);
+    next(lexer);
+    next(lexer);
+    next(lexer);
+    next(lexer);
+
+    return init_token(TOKEN_PETRICHOR, value);
 }
 
 Token *next_with_token(Lexer *lexer, Token *token)
