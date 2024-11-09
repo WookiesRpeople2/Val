@@ -10,6 +10,7 @@ AST *init_ast(int type)
     // For variable definitions
     ast->var_def_name = (void *)0;
     ast->var_def_value = (void *)0;
+    ast->var_redef_var = (void *)0;
 
     // For variables
     ast->var_name = (void *)0;
@@ -37,6 +38,7 @@ AST *init_ast(int type)
 
     // For arrays
     ast->array_elements = (void *)0;
+    ast->array_index = (void *)0;
     ast->array_elements_size = 0;
 
     // For objects (key-value pairs)

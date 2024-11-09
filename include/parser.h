@@ -59,6 +59,8 @@ AST *parse_float(Parser *parser, Scope *scope);
 
 AST *parse_array(Parser *parser, Scope *scope);
 
+AST *parse_accsess_array(Parser *parser, Scope *scope);
+
 AST *parse_object(Parser *parser, Scope *scope);
 
 #endif

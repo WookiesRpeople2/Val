@@ -1,0 +1,8 @@
+euphoria name -> "Baby bear";
+elixir year_born -> 2001;
+elixir age -> 2024 - year_born;
+lassitude money -> 8090.30;
+sequentia arr -> [ 1, 2, 3, 4 ];
+fulminare obj -> {1 : "John"};
+
+ebullience(name,"heloo \n", year_born, age, money, arr[4], obj, blue);

@@ -100,7 +100,7 @@ static AST *builtin_exit()
 
 AST *vist(AST *child)
 {
-    // printf("%s\n", child->var_def_name);
+    // printf("%s\n", child->var_def_value);
     // printf("\n%s", child->var_name);
     // printf("CHILD: %s", child->string_value);
     switch (child->type)
@@ -111,6 +111,8 @@ AST *vist(AST *child)
         return vist_var(child);
     case AST_REDEF_VAR:
         return vist_var_reassign(child);
+    case AST_ARRAY_ACCSESS:
+        return vist_array_accses(child);
     case AST_FN_CALL:
         return vist_fn_call(child);
     case AST_STRING:
@@ -129,6 +131,7 @@ AST *vist(AST *child)
     case AST_SUB:
     case AST_MUL:
     case AST_DIV:
+        // printf("TYPE: %d", child->type);
         return vist_binop(child);
     case AST_AX:
         return vist_conditional(child);
@@ -183,8 +186,26 @@ AST *vist_var(AST *child)
 
 AST *vist_var_reassign(AST *child)
 {
+    if (child->var_def_value->var_redef_var != NULL)
+    {
+        AST *var = get_var_def(child->scope, child->var_def_value->var_name);
+        // AST *idk = vist_var_reassign(var->var_redef_var);
+        // printf("LOLLLL: %d + %d", var->var_def_value->int_value, child->var_def_value->var_redef_var->right->int_value);
+        if(child->var_def_value->var_redef_var->right != NULL){
+            child->var_def_value->var_redef_var->left = var->var_def_value;
+        }else{
+            child->var_def_value->var_redef_var = var->var_def_value;
+        }
+        AST *new_value = vist(child->var_def_value->var_redef_var);
+        AST *var_def = reassign_var_def(child->scope, child->var_name, new_value);
+        return var_def;
+        // new_value = vist_binop(child);
+    }
+    // printf("\n\nNJCSCSOIUJ: %d", child->var_def_value->int_value);
     AST *new_value = vist(child->var_def_value);
+
     AST *var_def = reassign_var_def(child->scope, child->var_name, new_value);
+
     return var_def;
 }
 
@@ -225,9 +246,12 @@ AST *vist_conditional(AST *child)
 }
 
 AST *vist_relation(AST *child)
-{
+{   
     AST *left = vist(child->left);
-    AST *right = vist(child->right);
+    AST *right = NULL;
+    
+    if(child->right != NULL)
+        right = vist(child->right);
 
     AST *result = init_ast(AST_INT);
     result->int_value = 0; // Default to false (0)
@@ -252,9 +276,12 @@ AST *vist_relation(AST *child)
     case AST_NEQ:
         result->int_value = (left->int_value != right->int_value);
         break;
-    case 1:
-        result->int_value = true;
+    case AST_TRUE:
+        result->int_value = left->int_value;
         break;
+    case AST_FALSE:
+         result->int_value = left->int_value;
+         break;
     default:
         printf("Unsupported condition type: %d\n", child->type);
         exit(1);
@@ -326,6 +353,19 @@ AST *vist_array(AST *child)
     return child;
 }
 
+AST *vist_array_accses(AST *child)
+{
+    printf("hit");
+    AST *array = get_var_def(child->scope, child->var_name)->var_def_value;
+    int index = vist(child->array_index)->int_value;
+    if (index < 0 || index >= array->array_elements_size)
+    {
+        printf("Error: Array index out of bounds\n");
+        exit(1);
+    }
+    return array->array_elements[index];
+}
+
 AST *vist_object(AST *child)
 {
     // for (int i = 0; i < child->object_size; i++)
@@ -359,7 +399,8 @@ AST *vist_object(AST *child)
 
 AST *vist_binop(AST *child)
 {
-    // printf("Heloooo");
+    // printf("hitted");
+    // printf("\n%d + %d\n", child->left, child->right->int_value);
     AST *left = vist(child->left);
     AST *right = vist(child->right);
 
@@ -464,7 +505,7 @@ AST *vist_binop(AST *child)
         printf("Type error: Mismatched types in arithmetic expression: left type %d, right type %d\n", left->type, right->type);
         exit(1);
     }
-
+    // printf("%d", result);
     return result;
 }
 

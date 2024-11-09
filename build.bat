@@ -4,7 +4,7 @@ setlocal enabledelayedexpansion
 set CC=gcc
 set exec=val.exe
 set flags=-g
-set installDir="C:\Program Files\hello\"
+set installDir="C:\Program Files\val\"
 
 if "%1"=="make" (
     echo Compiling source files...

@@ -1,0 +1,14 @@
+elixir year_born -> 2002;
+ax(2024 - year_born < 22){
+        year_born -> 2001;
+        ebullience("You are born in the the 20th centary");
+}
+liax(2024 - year_born ->-> 22 ){
+        ebullience("You are born before the 19th centary");
+}
+li{
+    ebullience("you are a whole lot older\n");
+};
+
+ebullience("I wish this worked that would be so so nice dude");
+ebullience("you are a whole lot older\n");

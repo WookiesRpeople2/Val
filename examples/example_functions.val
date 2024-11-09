@@ -1,0 +1,3 @@
+eudaemonia custom_fn(elixir a, elixir b)=>{
+    euphoria(a + b);
+}

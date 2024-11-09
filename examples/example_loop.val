@@ -1,0 +1,14 @@
+petrichor(elixir i -> 0; i < 100){
+    ebullience(i);
+};
+
+
+elixir j -> 1;
+elixir m -> 0;
+incendiary(j){
+    m -> m+1;
+    ax(m >-> 5){
+        j->0;
+    };
+    ebullience("\n", m);
+};

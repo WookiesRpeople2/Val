@@ -11,6 +11,7 @@ typedef struct TokenStruct
         TOKEN_LASSITUDE,
         TOKEN_SEQUENTIA,
         TOKEN_FULMINARE,
+        TOKEN_BLUE,
         TOKEN_EQUAL,
         TOKEN_EQUAL_EQUAL,
         TOKEN_STRING,

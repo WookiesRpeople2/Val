@@ -19,6 +19,7 @@ typedef struct AST_STRUCT
         AST_ADD,
         AST_SUB,
         AST_ARRAY,
+        AST_ARRAY_ACCSESS,
         AST_OBJECT,
         AST_OBJECT_PAIR,
         AST_FN_CALL,
@@ -35,6 +36,8 @@ typedef struct AST_STRUCT
         AST_PETRICHOR,
         AST_INCENDIARY,
         AST_INURE,
+        AST_TRUE,
+        AST_FALSE,
         AST_NOOP,
         AST_COMPOUND,
     } type;
@@ -44,6 +47,7 @@ typedef struct AST_STRUCT
     // For variable definitions
     char *var_def_name;
     struct AST_STRUCT *var_def_value;
+    struct AST_STRUCT *var_redef_var;
 
     // For variables
     char *var_name;
@@ -71,6 +75,7 @@ typedef struct AST_STRUCT
 
     // For arrays
     struct AST_STRUCT **array_elements;
+    struct AST_STRUCT *array_index;
     size_t array_elements_size;
 
     // For objects (key-value pairs)

@@ -35,6 +35,8 @@ AST *vist_float(AST *child);
 
 AST *vist_array(AST *child);
 
+AST *vist_array_accses(AST *child);
+
 AST *vist_object(AST *child);
 
 AST *vist_binop(AST *child);
